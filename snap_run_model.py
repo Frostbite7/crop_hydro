@@ -7,7 +7,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from utility_modules import load_swc_ne3, load_swc_ne2, load_swc_bo1
+from utility_modules import load_swc_ne3, load_swc_ne2, load_swc_ne1, load_swc_bo1, load_swc_br1, load_swc_br3
 from noah_energy.no_stress.energy_driver import ENERGY_DRIVER_NOSTRESS
 from noah_energy.phm.energy_driver import ENERGY_DRIVER_PHM
 from noah_energy.btran.energy_driver import ENERGY_DRIVER_BTRAN
@@ -123,8 +123,14 @@ def run_model(site, coordinates, utc_offset, DT, parm_path, start, end, results_
         swc_h, swc_v = load_swc_ne3(aflux_file, start, end)
     elif site == 'US-Ne2':
         swc_h, swc_v = load_swc_ne2(aflux_file, start, end)
+    elif site == 'US-Ne1':
+        swc_h, swc_v = load_swc_ne1(aflux_file, start, end)
     elif site == 'US-Bo1':
         swc_h, swc_v = load_swc_bo1(aflux_file, start, end)
+    elif site == 'US-Br1':
+        swc_h, swc_v = load_swc_br1(aflux_file, start, end)
+    elif site == 'US-Br3':
+        swc_h, swc_v = load_swc_br3(aflux_file, start, end)
     swc_v = pd.DataFrame(swc_v).interpolate(axis=1).values
 
     # load parameters
@@ -186,8 +192,14 @@ def run_model(site, coordinates, utc_offset, DT, parm_path, start, end, results_
             SH2O = set_swc_ne3(swc_v, i)
         elif site == 'US-Ne2':
             SH2O = set_swc_ne2(swc_v, i)
+        elif site == 'US-Ne1':
+            SH2O = set_swc_ne1(swc_v, i)
         elif site == 'US-Bo1':
             SH2O = set_swc_bo1(swc_v, i)
+        elif site == 'US-Br1':
+            SH2O = set_swc_br1(swc_v, i)
+        elif site == 'US-Br3':
+            SH2O = set_swc_br3(swc_v, i)
         SMC = SH2O
 
         # variables from full model
@@ -300,7 +312,25 @@ def set_swc_ne2(swc_v, i):
     return SH2O
 
 
+def set_swc_ne1(swc_v, i):
+    # -0.1, -0.25, -0.5, -1.0
+    SH2O = [swc_v[0, i], swc_v[1, i], swc_v[2, i], swc_v[3, i]]
+    return SH2O
+
+
 def set_swc_bo1(swc_v, i):
     # -0.1, -0.2
     SH2O = [swc_v[0, i], swc_v[1, i], swc_v[1, i], swc_v[1, i]]
+    return SH2O
+
+
+def set_swc_br1(swc_v, i):
+    # -0.05
+    SH2O = [swc_v[0, i], swc_v[0, i], swc_v[0, i], swc_v[0, i]]
+    return SH2O
+
+
+def set_swc_br3(swc_v, i):
+    # -0.05
+    SH2O = [swc_v[0, i], swc_v[0, i], swc_v[0, i], swc_v[0, i]]
     return SH2O

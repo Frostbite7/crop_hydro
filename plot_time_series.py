@@ -6,7 +6,7 @@ from datetime import datetime
 from glob import glob
 
 from noah_energy.phm.flux_subroutines import ESAT
-from utility_modules import read_standalone, load_swc_ne3, load_swc_ne2, load_swc_bo1
+from utility_modules import read_standalone, load_swc_ne3, load_swc_ne2, load_swc_bo1, load_swc_br1
 from run_case import flux_file_suffix_dict, aflux_file_suffix_dict
 
 
@@ -17,11 +17,9 @@ from run_case import flux_file_suffix_dict, aflux_file_suffix_dict
 def main():
     # site info and times
     site = 'US-Ne3'
-    year = 2005
-    obs_hourly = 1
-    model_hourly = 1
-    start = datetime(year, 7, 1)  # check for crops: maize 7/1-8/15, soy 7/15 - 9/1
-    end = datetime(year, 8, 15)
+    year = 2010
+    start = datetime(year, 7, 15)  # check for crops: maize 7/1-8/15, soy 7/15 - 9/1
+    end = datetime(year, 9, 1)
     sim_start = datetime(year, 7, 1)
     # sim_end = datetime(year, 9, 15)
     save_fig = 1
@@ -30,6 +28,11 @@ def main():
     CAP_beta = 1
     if CAP_beta == 1:
         suffix_2 = '_capped'
+    if site == 'US-Ne3' or site == 'US-Ne2' or site == 'US-Ne1':
+        obs_hourly = 1
+    else:
+        obs_hourly = 0
+    model_hourly = 1
 
     # figs
     case_path = glob('/Users/yangyicge/Desktop/watercon/crop_hydro_case/case_run/{}/{}_{}*/'.format(site, site, year))[0]
@@ -40,8 +43,8 @@ def main():
     fig_name7 = 'time_series_daily_gpp' + test_suffix + '.pdf'
     fig_name8 = 'time_series_midday_gpp' + test_suffix + '.pdf'
     fig_name6 = 'time_series_midday_forcing' + test_suffix + '.pdf'
-    fig_name9 = 'time_series_daily_paper_dhlf' + test_suffix + '.pdf'
-    fig_name10 = 'time_series_midday_paper_dhlf' + test_suffix + '.pdf'
+    fig_name9 = 'time_series_daily_paper' + test_suffix + '.pdf'
+    fig_name10 = 'time_series_midday_paper' + test_suffix + '.pdf'
     # print('fig_path: ', fig_path)
     # print('case_path: ', case_path)
     # print(case_path.split('/'))
@@ -53,12 +56,12 @@ def main():
     flux_file = flux_path + 'fluxnet/' + flux_file_suffix
     aflux_file = flux_path + 'ameriflux/' + aflux_file_suffix
     case_name_1 = 'nostress'
-    standalone_path_1 = case_path + 'standalone_flux_nostress{}.npy'.format(test_suffix)
+    standalone_path_1 = case_path + 'standalone_flux_nostress{}.npy'.format('')
     case_name_2 = 'beta'
     # suffix_2 = ''
-    standalone_path_2 = case_path + 'standalone_flux_beta{}{}.npy'.format(suffix_2, test_suffix)
+    standalone_path_2 = case_path + 'standalone_flux_beta{}{}.npy'.format(suffix_2, '')
     case_name_3 = 'phm'
-    standalone_path_3 = case_path + 'standalone_flux_phm{}.npy'.format(test_suffix)
+    standalone_path_3 = case_path + 'standalone_flux_phm{}.npy'.format('')
 
     # load standalone model run
     print('reading model data...')
@@ -122,12 +125,19 @@ def main():
     if site == 'US-Ne3':
         swc_h, swc_v = load_swc_ne3(aflux_file, start, end)
         swc = swc_v[1]
+        swc_depth = 0.25
     elif site == 'US-Ne2':
         swc_h, swc_v = load_swc_ne2(aflux_file, start, end)
         swc = swc_v[1]
+        swc_depth = 0.25
     elif site == 'US-Bo1':
         swc_h, swc_v = load_swc_bo1(aflux_file, start, end)
         swc = swc_v[1]
+        swc_depth = 0.2
+    elif site == 'US-Br1':
+        swc_h, swc_v = load_swc_br1(aflux_file, start, end)
+        swc = swc_v[0]
+        swc_depth = 0.05
 
     # convert all to hourly
     print('converting to hourly...')
@@ -160,6 +170,23 @@ def main():
     # get vpd
     ESW, ESI, DESW, DESI = ESAT(temp_flux)
     vpd_flux = (100 - rh_flux) / 100 * ESW
+
+    # mask data based on swc mask
+    transpiration_1 = np.ma.array(transpiration_1, mask=swc.mask)
+    apar_1 = np.ma.array(apar_1, mask=swc.mask)
+    tr_p_1 = np.ma.array(tr_p_1, mask=swc.mask)
+    ET_1 = np.ma.array(ET_1, mask=swc.mask)
+    gpp_1 = np.ma.array(gpp_1, mask=swc.mask)
+    transpiration_2 = np.ma.array(transpiration_2, mask=swc.mask)
+    apar_2 = np.ma.array(apar_2, mask=swc.mask)
+    tr_p_2 = np.ma.array(tr_p_2, mask=swc.mask)
+    ET_2 = np.ma.array(ET_2, mask=swc.mask)
+    gpp_2 = np.ma.array(gpp_2, mask=swc.mask)
+    transpiration_3 = np.ma.array(transpiration_3, mask=swc.mask)
+    apar_3 = np.ma.array(apar_3, mask=swc.mask)
+    tr_p_3 = np.ma.array(tr_p_3, mask=swc.mask)
+    ET_3 = np.ma.array(ET_3, mask=swc.mask)
+    gpp_3 = np.ma.array(gpp_3, mask=swc.mask)
 
     # data processing
     print('processing data...')
@@ -295,12 +322,12 @@ def main():
     # plot daily
     fig9, ax9 = plt.subplots(2, 1, figsize=(8, 6))
     plot_time_series_paper(fig9, ax9, times_d, times_d, ET_1_d, ET_2_d, ET_3_d, ET_flux_d, swc_d, swc_d, prec_flux_d, vpd_flux_d,
-                           swc_range, et_range_d, prec_range, vpd_range_d)
+                           swc_range, et_range_d, prec_range, vpd_range_d, swc_depth)
 
     # plot midday
     fig10, ax10 = plt.subplots(2, 1, figsize=(8, 6))
     plot_time_series_paper(fig10, ax10, times_d, times_d, ET_1_md, ET_2_md, ET_3_md, ET_flux_md, swc_md, swc_d, prec_flux_d,
-                           vpd_flux_md, swc_range, et_range, prec_range, vpd_range)
+                           vpd_flux_md, swc_range, et_range, prec_range, vpd_range, swc_depth)
 
     if save_fig:
         fig2.savefig(fig_path + fig_name2)
@@ -467,10 +494,9 @@ def plot_time_series_force(fig, ax, times, times_d, swin, apar, temp, rh, vpd, l
 
 
 def plot_time_series_paper(fig, ax, times, times_d, ET_1, ET_2, ET_3, ET_flux, swc, swc_d, prec_flux_d, vpd, swc_range, et_range,
-                           prec_range, vpd_range):
+                           prec_range, vpd_range, swc_depth):
     ax[0].plot(times, ET_1, label='NHL', c='royalblue', lw=1, ls='-')
     ax[0].plot(times, ET_3, label='PHM', c='green', lw=1, ls='-')
-    ax[0].plot(times, ET_2, label='DHLF', c='cyan', lw=1, ls='-')
     ax[0].plot(times, ET_flux, label='Obs.', c='k', lw=1)
     ax[0].set_ylabel('ET W/m2')
     ax[0].set_ylim(et_range)
@@ -487,7 +513,7 @@ def plot_time_series_paper(fig, ax, times, times_d, ET_1, ET_2, ET_3, ET_flux, s
     ax[1].set_ylim(prec_range)
     ax[1].legend(loc='upper left')
     ax2 = ax[1].twinx()
-    ax2.plot(times_d, swc_d, c='tab:brown', lw=1, label='SWC at -0.25m')
+    ax2.plot(times_d, swc_d, c='tab:brown', lw=1, label='SWC at -{}m'.format(swc_depth))
     ax2.set_ylabel('SWC', color='tab:brown')
     ax2.set_ylim(swc_range)
     ax2.tick_params(axis='y', labelcolor='tab:brown')

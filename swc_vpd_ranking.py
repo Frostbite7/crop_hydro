@@ -7,8 +7,7 @@ from run_case import flux_file_suffix_dict, aflux_file_suffix_dict
 from noah_energy.phm.flux_subroutines import ESAT
 
 
-# this script plots the binned scatter response of PHM and Beta models
-# plot time: maize 7/1-9/1, soy 7/15 - 9/1
+# this script calculates annual average SWC and VPD for multiple sites and years
 
 def main():
     # set up multiple sites and years

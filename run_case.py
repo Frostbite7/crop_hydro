@@ -1,22 +1,23 @@
 from datetime import datetime
 from noah_energy.crop_hydro.snap_run_model import run_model
+from utility_modules import coord_dict, site_year_dict, flux_file_suffix_dict, aflux_file_suffix_dict
 
 
 # case info
-# Sim period: Ne1-3 7/1 - 9/15
+# Sim period: 7/1 - 9/15
 
 
 def main():
     # sim config
-    site = 'US-Ne2'
-    crop = 'soy'
-    year = 2004
-    mode = 'beta'
+    site = 'US-Br1'
+    crop = 'maize'
+    year = 2010
+    mode = 'nostress'
     start = datetime(year, 7, 1)
     end = datetime(year, 9, 15)
-    test_suffix = '_kmax4.18'
+    test_suffix = ''
     mode_suffix = ''
-    CAP_beta = 1
+    CAP_beta = 0
     if CAP_beta == 1 and mode == 'beta':
         mode_suffix = '_capped'
 
@@ -44,18 +45,7 @@ def main():
     return
 
 
-coord_dict = {'US-Ne1': [41.165, -96.476], 'US-Ne2': [41.165, -96.476], 'US-Ne3': [41.165, -96.476], 'US-Bo1': [40.0062, -88.2904]}
-site_year_dict = {'US-Ne1': [2003, 2012], 'US-Ne2': [2003, 2012], 'US-Ne3': [2003, 2012], 'US-Bo1': [2000, 2008]}
-flux_file_suffix_dict = {'US-Ne3': 'FLX_US-Ne3_FLUXNET2015_SUBSET_2001-2013_1-4/FLX_US-Ne3_FLUXNET2015_SUBSET_HR_2001-2013_1-4.csv',
-                         'US-Ne2': 'FLX_US-Ne2_FLUXNET2015_SUBSET_2001-2013_1-3/FLX_US-Ne2_FLUXNET2015_SUBSET_HR_2001-2013_1-3.csv',
-                         'US-Ne1': 'FLX_US-Ne1_FLUXNET2015_SUBSET_2001-2013_1-3/FLX_US-Ne1_FLUXNET2015_SUBSET_HR_2001-2013_1-3.csv',
-                         'US-Bo1': '',
-                         }
-aflux_file_suffix_dict = {'US-Ne3': 'AMF_US-Ne3_BASE-BADM_9-5/AMF_US-Ne3_BASE_HR_9-5.csv',
-                          'US-Ne2': 'AMF_US-Ne2_BASE-BADM_12-5/AMF_US-Ne2_BASE_HR_12-5.csv',
-                          'US-Ne1': 'AMF_US-Ne1_BASE-BADM_12-5/AMF_US-Ne1_BASE_HR_12-5.csv',
-                          'US-Bo1': 'AMF_US-Bo1_BASE-BADM_2-1/AMF_US-Bo1_BASE_HH_2-1.csv',
-                          }
+
 
 if __name__ == '__main__':
     main()
