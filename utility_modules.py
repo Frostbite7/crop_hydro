@@ -2,14 +2,17 @@ import numpy as np
 import pandas as pd
 
 coord_dict = {'US-Ne1': [41.165, -96.476], 'US-Ne2': [41.165, -96.476], 'US-Ne3': [41.165, -96.476], 'US-Bo1': [40.0062, -88.2904],
-              'US-Br1': [41.9749, -93.6906], 'US-Br3': [41.9749, -93.6906]}
-site_year_dict = {'US-Ne1': [2003, 2012], 'US-Ne2': [2003, 2012], 'US-Ne3': [2003, 2012], 'US-Bo1': [2000, 2008], 'US-Br1': [2005, 2011]}
+              'US-Br1': [41.9749, -93.6906], 'US-Br3': [41.9749, -93.6906], 'US-IB1': [41.8593, -88.2227], 'US-Ro1': [44.7143, -93.0898]}
+site_year_dict = {'US-Ne1': [2003, 2012], 'US-Ne2': [2003, 2012], 'US-Ne3': [2003, 2012], 'US-Bo1': [2000, 2008], 'US-Br1': [2005, 2011],
+                  'US-Br3': [2005, 2011], 'US-IB1': [2005, 2011], 'US-Ro1': [2004, 2012]}
 flux_file_suffix_dict = {'US-Ne3': 'FLX_US-Ne3_FLUXNET2015_SUBSET_2001-2013_1-4/FLX_US-Ne3_FLUXNET2015_SUBSET_HR_2001-2013_1-4.csv',
                          'US-Ne2': 'FLX_US-Ne2_FLUXNET2015_SUBSET_2001-2013_1-3/FLX_US-Ne2_FLUXNET2015_SUBSET_HR_2001-2013_1-3.csv',
                          'US-Ne1': 'FLX_US-Ne1_FLUXNET2015_SUBSET_2001-2013_1-3/FLX_US-Ne1_FLUXNET2015_SUBSET_HR_2001-2013_1-3.csv',
                          'US-Bo1': '',
                          'US-Br1': '',
                          'US-Br3': '',
+                         'US-IB1': '',
+                         'US-Ro1': '',
                          }
 aflux_file_suffix_dict = {'US-Ne3': 'AMF_US-Ne3_BASE-BADM_9-5/AMF_US-Ne3_BASE_HR_9-5.csv',
                           'US-Ne2': 'AMF_US-Ne2_BASE-BADM_12-5/AMF_US-Ne2_BASE_HR_12-5.csv',
@@ -17,6 +20,8 @@ aflux_file_suffix_dict = {'US-Ne3': 'AMF_US-Ne3_BASE-BADM_9-5/AMF_US-Ne3_BASE_HR
                           'US-Bo1': 'AMF_US-Bo1_BASE-BADM_2-1/AMF_US-Bo1_BASE_HH_2-1.csv',
                           'US-Br1': 'AMF_US-Br1_BASE-BADM_1-1/AMF_US-Br1_BASE_HH_1-1.csv',
                           'US-Br3': 'AMF_US-Br3_BASE-BADM_1-1/AMF_US-Br3_BASE_HH_1-1.csv',
+                          'US-IB1': 'AMF_US-IB1_BASE-BADM_7-5/AMF_US-IB1_BASE_HH_7-5.csv',
+                          'US-Ro1': 'AMF_US-Ro1_BASE-BADM_5-5/AMF_US-Ro1_BASE_HH_5-5.csv',
                           }
 
 
@@ -187,6 +192,54 @@ def load_swc_br3(aflux_file, start, end):
             swc_ = dfa[(dfa.TIMESTAMP_START >= int(
                 '{:4d}{:02d}{:02d}0000'.format(start.year, start.month, start.day))) & (dfa.TIMESTAMP_START < int(
                 '{:4d}{:02d}{:02d}0000'.format(end.year, end.month, end.day)))].loc[:, 'SWC_1']
+            # print('Gaps! SWC_H{}V{}R1:'.format(point + 1, depth + 1), np.sum(swc_ == -9999))
+            # swc_v_.append(swc_.replace(-9999, np.nan).interpolate().values / 100)
+            swc_v_.append(swc_)
+        swc_h.append(swc_v_)
+    # swc_h_ = np.array(swc_h)
+    swc_h = np.ma.masked_values(swc_h, -9999) / 100
+    swc_v = np.ma.mean(swc_h, 0)
+    swc_v = np.maximum(swc_v, 0.02)
+    # print('swc_v:', swc_v)
+
+    return swc_h, swc_v
+
+
+def load_swc_ib1(aflux_file, start, end):
+    dfa = pd.read_csv(aflux_file, skiprows=2)
+    h_number = 1
+    v_number = 4
+    swc_h = []
+    for point in range(h_number):
+        swc_v_ = []
+        for depth in range(v_number):
+            swc_ = dfa[(dfa.TIMESTAMP_START >= int(
+                '{:4d}{:02d}{:02d}0000'.format(start.year, start.month, start.day))) & (dfa.TIMESTAMP_START < int(
+                '{:4d}{:02d}{:02d}0000'.format(end.year, end.month, end.day)))].loc[:, 'SWC_1_{}_1'.format(depth + 1)]
+            # print('Gaps! SWC_H{}V{}R1:'.format(point + 1, depth + 1), np.sum(swc_ == -9999))
+            # swc_v_.append(swc_.replace(-9999, np.nan).interpolate().values / 100)
+            swc_v_.append(swc_)
+        swc_h.append(swc_v_)
+    # swc_h_ = np.array(swc_h)
+    swc_h = np.ma.masked_values(swc_h, -9999) / 100
+    swc_v = np.ma.mean(swc_h, 0)
+    swc_v = np.maximum(swc_v, 0.02)
+    # print('swc_v:', swc_v)
+
+    return swc_h, swc_v
+
+
+def load_swc_ro1(aflux_file, start, end):
+    dfa = pd.read_csv(aflux_file, skiprows=2)
+    h_number = 1
+    v_number = 1
+    swc_h = []
+    for point in range(h_number):
+        swc_v_ = []
+        for depth in range(v_number):
+            swc_ = dfa[(dfa.TIMESTAMP_START >= int(
+                '{:4d}{:02d}{:02d}0000'.format(2016, start.month, start.day))) & (dfa.TIMESTAMP_START < int(
+                '{:4d}{:02d}{:02d}0000'.format(2016, end.month, end.day)))].loc[:, 'SWC']
             # print('Gaps! SWC_H{}V{}R1:'.format(point + 1, depth + 1), np.sum(swc_ == -9999))
             # swc_v_.append(swc_.replace(-9999, np.nan).interpolate().values / 100)
             swc_v_.append(swc_)

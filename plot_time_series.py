@@ -6,7 +6,8 @@ from datetime import datetime
 from glob import glob
 
 from noah_energy.phm.flux_subroutines import ESAT
-from utility_modules import read_standalone, load_swc_ne3, load_swc_ne2, load_swc_bo1, load_swc_br1
+from utility_modules import read_standalone, load_swc_ne3, load_swc_ne2, load_swc_ne1, load_swc_bo1, load_swc_br1, load_swc_br3, \
+    load_swc_ib1, load_swc_ro1
 from run_case import flux_file_suffix_dict, aflux_file_suffix_dict
 
 
@@ -17,11 +18,8 @@ from run_case import flux_file_suffix_dict, aflux_file_suffix_dict
 def main():
     # site info and times
     site = 'US-Ne3'
-    year = 2010
-    start = datetime(year, 7, 15)  # check for crops: maize 7/1-8/15, soy 7/15 - 9/1
-    end = datetime(year, 9, 1)
+    year = 2005
     sim_start = datetime(year, 7, 1)
-    # sim_end = datetime(year, 9, 15)
     save_fig = 1
     test_suffix = ''
     suffix_2 = ''
@@ -45,9 +43,18 @@ def main():
     fig_name6 = 'time_series_midday_forcing' + test_suffix + '.pdf'
     fig_name9 = 'time_series_daily_paper' + test_suffix + '.pdf'
     fig_name10 = 'time_series_midday_paper' + test_suffix + '.pdf'
+    fig_name11 = 'time_series_midday_gpp_paper' + test_suffix + '.pdf'
     # print('fig_path: ', fig_path)
     # print('case_path: ', case_path)
     # print(case_path.split('/'))
+    if crop == 'maize':  # check for crops: maize 7/1-8/15, soy 7/15 - 9/1
+        start = datetime(year, 7, 1)
+        end = datetime(year, 8, 15)
+    else:
+        start = datetime(year, 7, 15)
+        end = datetime(year, 9, 1)
+    print('start: ', start)
+    print('end: ', end)
 
     # file path
     flux_path = '/Users/yangyicge/Desktop/watercon/flux/'
@@ -68,10 +75,10 @@ def main():
 
     transpiration_1, apar_1, tr_p_1, ET_1, gpp_1, lai_1 = read_standalone(standalone_path_1, case_name_1, start, end, sim_start,
                                                                           model_hourly)
-    transpiration_2, apar_2, tr_p_2, ET_2, gpp_2, lai_2 = read_standalone(standalone_path_2, case_name_2, start, end, sim_start,
-                                                                          model_hourly)
-    # transpiration_2, apar_2, tr_p_2, ET_2, gpp_2 = np.zeros(transpiration_1.shape), np.zeros(apar_1.shape), np.zeros(
-    #     tr_p_1.shape), np.zeros(ET_1.shape), np.zeros(gpp_1.shape)
+    # transpiration_2, apar_2, tr_p_2, ET_2, gpp_2, lai_2 = read_standalone(standalone_path_2, case_name_2, start, end, sim_start,
+    #                                                                       model_hourly)
+    transpiration_2, apar_2, tr_p_2, ET_2, gpp_2 = np.zeros(transpiration_1.shape), np.zeros(apar_1.shape), np.zeros(
+        tr_p_1.shape), np.zeros(ET_1.shape), np.zeros(gpp_1.shape)
     transpiration_3, apar_3, tr_p_3, ET_3, gpp_3, lai_3 = read_standalone(standalone_path_3, case_name_3, start, end, sim_start,
                                                                           model_hourly)
     # transpiration_3, apar_3, tr_p_3, ET_3, gpp_3 = np.zeros(transpiration_1.shape), np.zeros(apar_1.shape), np.zeros(
@@ -130,6 +137,10 @@ def main():
         swc_h, swc_v = load_swc_ne2(aflux_file, start, end)
         swc = swc_v[1]
         swc_depth = 0.25
+    elif site == 'US-Ne1':
+        swc_h, swc_v = load_swc_ne1(aflux_file, start, end)
+        swc = swc_v[1]
+        swc_depth = 0.25
     elif site == 'US-Bo1':
         swc_h, swc_v = load_swc_bo1(aflux_file, start, end)
         swc = swc_v[1]
@@ -138,6 +149,18 @@ def main():
         swc_h, swc_v = load_swc_br1(aflux_file, start, end)
         swc = swc_v[0]
         swc_depth = 0.05
+    elif site == 'US-Br3':
+        swc_h, swc_v = load_swc_br3(aflux_file, start, end)
+        swc = swc_v[0]
+        swc_depth = 0.05
+    elif site == 'US-IB1':
+        swc_h, swc_v = load_swc_ib1(aflux_file, start, end)
+        swc = swc_v[2]
+        swc_depth = 0.25
+    elif site == 'US-Ro1':
+        swc_h, swc_v = load_swc_ro1(aflux_file, start, end)
+        swc = swc_v[0]
+        swc_depth = 0.1
 
     # convert all to hourly
     print('converting to hourly...')
@@ -237,6 +260,15 @@ def main():
     gpp_flux_md = gpp_flux[mean_length // 2::mean_length]
     lai_1_md = lai_1[mean_length_model // 2::mean_length_model]
 
+    # calculate metrics
+    print('calculating metrics...')
+    r2_1 = np.corrcoef(ET_flux_md, ET_1_md)[0, 1] ** 2
+    r2_2 = np.corrcoef(ET_flux_md, ET_2_md)[0, 1] ** 2
+    r2_3 = np.corrcoef(ET_flux_md, ET_3_md)[0, 1] ** 2
+    print('r2_1: ', r2_1)
+    print('r2_2: ', r2_2)
+    print('r2_3: ', r2_3)
+
     # plot
     print('plotting...')
     if not os.path.exists(fig_path):
@@ -244,7 +276,7 @@ def main():
     times = pd.date_range(start, end, freq='1H')[:-1]
     times_d = pd.date_range(start, end, freq='D')[:-1]
     et_range = [-5, 1000]
-    swc_range = [0.1, 0.5]
+    swc_range = [0.1, 0.6]
     prec_range = [0, 50]
     et_range_d = [-5, 500]
     vpd_range = (0, 4000)
@@ -322,12 +354,17 @@ def main():
     # plot daily
     fig9, ax9 = plt.subplots(2, 1, figsize=(8, 6))
     plot_time_series_paper(fig9, ax9, times_d, times_d, ET_1_d, ET_2_d, ET_3_d, ET_flux_d, swc_d, swc_d, prec_flux_d, vpd_flux_d,
-                           swc_range, et_range_d, prec_range, vpd_range_d, swc_depth)
+                           swc_range, et_range_d, prec_range, vpd_range_d, swc_depth, r2_1, r2_3)
 
     # plot midday
     fig10, ax10 = plt.subplots(2, 1, figsize=(8, 6))
     plot_time_series_paper(fig10, ax10, times_d, times_d, ET_1_md, ET_2_md, ET_3_md, ET_flux_md, swc_md, swc_d, prec_flux_d,
-                           vpd_flux_md, swc_range, et_range, prec_range, vpd_range, swc_depth)
+                           vpd_flux_md, swc_range, et_range, prec_range, vpd_range, swc_depth, r2_1, r2_3)
+
+    # plot carbon midday
+    fig11, ax11 = plt.subplots(2, 1, figsize=(8, 6))
+    plot_time_series_carbon_paper(fig11, ax11, times_d, times_d, gpp_1_md, gpp_2_md, gpp_3_md, gpp_flux_md, swc_md, swc_d, prec_flux_d,
+                                  vpd_flux_md, swc_range, gpp_range, prec_range, vpd_range, swc_depth)
 
     if save_fig:
         fig2.savefig(fig_path + fig_name2)
@@ -337,8 +374,10 @@ def main():
         fig6.savefig(fig_path + fig_name6)
         fig9.savefig(fig_path + fig_name9)
         fig10.savefig(fig_path + fig_name10)
+        fig11.savefig(fig_path + fig_name11)
 
-    plt.show()
+
+    # plt.show()
 
     return
 
@@ -346,9 +385,9 @@ def main():
 def plot_time_series(fig, ax, times, times_d, tr_p_1, tr_p_2, tr_p_3, transpiration_1, transpiration_2, transpiration_3, ET_1, ET_2,
                      ET_3, ET_flux, swc, swc_d, prec_flux_d, swin, apar, vpd, swc_range, et_range, prec_range, rad_range, vpd_range,
                      suffix_2):
-    ax[0].plot(times, tr_p_3, label='Tww', c='b')
-    ax[0].plot(times, transpiration_3, label='T', c='c')
-    ax[0].plot(times, ET_3, label='ET', c='g')
+    ax[0].plot(times, tr_p_3, label='T NHL', c='b')
+    ax[0].plot(times, transpiration_3, label='T PHM', c='c')
+    ax[0].plot(times, ET_3, label='ET PHM', c='g')
     ax[0].plot(times, ET_flux, label='ET obs.', c='k')
     ax[0].set_ylabel('PHM T W/m2')
     ax[0].set_ylim(et_range)
@@ -494,12 +533,48 @@ def plot_time_series_force(fig, ax, times, times_d, swin, apar, temp, rh, vpd, l
 
 
 def plot_time_series_paper(fig, ax, times, times_d, ET_1, ET_2, ET_3, ET_flux, swc, swc_d, prec_flux_d, vpd, swc_range, et_range,
-                           prec_range, vpd_range, swc_depth):
+                           prec_range, vpd_range, swc_depth, r2_1, r2_3):
     ax[0].plot(times, ET_1, label='NHL', c='royalblue', lw=1, ls='-')
     ax[0].plot(times, ET_3, label='PHM', c='green', lw=1, ls='-')
     ax[0].plot(times, ET_flux, label='Obs.', c='k', lw=1)
     ax[0].set_ylabel('ET W/m2')
     ax[0].set_ylim(et_range)
+    ax[0].legend(loc='upper left')
+    ax[0].text(0.69, 0.9, r'$R^2$ NHL: {:.2f}'.format(r2_1), transform=ax[0].transAxes, c='royalblue')
+    ax[0].text(0.69, 0.8, r'$R^2$ PHM: {:.2f}'.format(r2_3), transform=ax[0].transAxes, c='green')
+    ax2 = ax[0].twinx()
+    ax2.plot(times, vpd, c='tab:red', ls='--', lw=1, label='VPD')
+    ax2.set_ylabel('VPD Pa', color='tab:red')
+    ax2.set_ylim(vpd_range)
+    ax2.tick_params(axis='y', labelcolor='tab:red')
+    ax2.legend(loc='upper right')
+
+    if not np.sum(~prec_flux_d.mask) == 0:
+        ax[1].bar(times_d, prec_flux_d, color='tab:blue', label='Precipitation')
+    ax[1].set_ylabel('Precipitation mm/d')
+    ax[1].set_ylim(prec_range)
+    ax[1].legend(loc='upper left')
+    ax2 = ax[1].twinx()
+    ax2.plot(times_d, swc_d, c='tab:brown', lw=1, label='SWC at -{}m'.format(swc_depth))
+    ax2.set_ylabel('SWC', color='tab:brown')
+    ax2.set_ylim(swc_range)
+    ax2.tick_params(axis='y', labelcolor='tab:brown')
+    ax2.legend(loc='upper right')
+
+    fig.autofmt_xdate()
+    fig.tight_layout()
+
+    return
+
+
+def plot_time_series_carbon_paper(fig, ax, times, times_d, gpp_1, gpp_2, gpp_3, gpp_flux, swc, swc_d, prec_flux_d, vpd, swc_range,
+                                  gpp_range,
+                                  prec_range, vpd_range, swc_depth):
+    ax[0].plot(times, gpp_1, label='NHL', c='royalblue', lw=1, ls='-')
+    ax[0].plot(times, gpp_3, label='PHM', c='green', lw=1, ls='-')
+    ax[0].plot(times, gpp_flux, label='Obs.', c='k', lw=1)
+    ax[0].set_ylabel('GPP umol CO2/m2/s')
+    ax[0].set_ylim(gpp_range)
     ax[0].legend(loc='upper left')
     ax2 = ax[0].twinx()
     ax2.plot(times, vpd, c='tab:red', ls='--', lw=1, label='VPD')
@@ -508,7 +583,8 @@ def plot_time_series_paper(fig, ax, times, times_d, ET_1, ET_2, ET_3, ET_flux, s
     ax2.tick_params(axis='y', labelcolor='tab:red')
     ax2.legend(loc='upper right')
 
-    ax[1].bar(times_d, prec_flux_d, color='tab:blue', label='Precipitation')
+    if not np.sum(~prec_flux_d.mask) == 0:
+        ax[1].bar(times_d, prec_flux_d, color='tab:blue', label='Precipitation')
     ax[1].set_ylabel('Precipitation mm/d')
     ax[1].set_ylim(prec_range)
     ax[1].legend(loc='upper left')

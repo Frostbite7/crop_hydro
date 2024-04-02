@@ -9,10 +9,10 @@ from utility_modules import coord_dict, site_year_dict, flux_file_suffix_dict, a
 
 def main():
     # sim config
-    site = 'US-Br1'
-    crop = 'maize'
-    year = 2010
-    mode = 'nostress'
+    site = 'US-IB1'
+    year = 2007
+    crop = 'soy'
+    mode = 'phm'
     start = datetime(year, 7, 1)
     end = datetime(year, 9, 15)
     test_suffix = ''
@@ -43,8 +43,6 @@ def main():
               aflux_file_suffix, force_start_year, force_end_year, mode, DYNAMIC_beta=0, CAP_beta=CAP_beta)
 
     return
-
-
 
 
 if __name__ == '__main__':
