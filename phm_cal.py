@@ -106,18 +106,14 @@ class spotpy_setup:
         # parameter distribution
         dk_exp, db, dp, dvmx, dmp = default_parameters()
 
-        self.params = [spotpy.parameter.Uniform('BEXP', 0.8 * db, 1.35 * db, 0.175 * db, db, 0.8 * db, 1.35 * db),
-                       spotpy.parameter.Uniform('DKSAT_log10', max(1.2 * dk_exp, -6.2), min(0.8 * dk_exp, -4.4),
-                                                -0.2 * dk_exp, dk_exp, max(1.2 * dk_exp, -6.2), min(0.8 * dk_exp, -4.4)),
-                       spotpy.parameter.Uniform('PSISAT', max(0.65 * dp, 0.2), min(1.35 * dp, 0.85), 0.2 * dp, dp,
-                                                max(0.65 * dp, 0.2), min(1.35 * dp, 0.85)),
+        self.params = [
                        spotpy.parameter.Uniform('VGKSAT_e5', 0.1, 20, 2, 2, 0.1, 20),
                        spotpy.parameter.Uniform('VGSP50', -1000, -5, 100, -250, -1000, -5),
                        spotpy.parameter.Uniform('VGA2', 1, 15, 3, 4, 1, 15),
                        spotpy.parameter.Uniform('VGTLP', -1000, -5, 100, -100, -800, -5),
                        spotpy.parameter.Uniform('VGA3', 1, 15, 3, 4, 1, 15),
-                       spotpy.parameter.Uniform('VCMX25', 0.8 * dvmx, 1.35 * dvmx, 0.175 * dvmx, dvmx, 0.8 * dvmx, 1.35 * dvmx),
-                       spotpy.parameter.Uniform('MP', 0.8 * dmp, 1.35 * dmp, 0.175 * dmp, dmp, 0.8 * dmp, 1.35 * dmp),
+                       # spotpy.parameter.Uniform('VCMX25', 0.8 * dvmx, 1.35 * dvmx, 0.175 * dvmx, dvmx, 0.8 * dvmx, 1.35 * dvmx),
+                       # spotpy.parameter.Uniform('MP', 0.8 * dmp, 1.35 * dmp, 0.175 * dmp, dmp, 0.8 * dmp, 1.35 * dmp),
                        # spotpy.parameter.Uniform('RAI_log10', -1, 2, 0.5, 0.5, -1, 2),
                        ]
 
@@ -194,19 +190,19 @@ def config_parameters(config, vector):
     # RAI = 10 ** vector[10]
 
     # write to config
-    config['soil']['BEXP'] = str(BEXP)
-    config['soil']['DKSAT'] = str(DKSAT)
-    config['soil']['PSISAT'] = str(PSISAT)
-    config['soil']['SMCREF'] = str(SMCREF)
-    config['soil']['SMCWLT'] = str(SMCWLT)
-    config['soil']['DWSAT'] = str(DWSAT)
+    # config['soil']['BEXP'] = str(BEXP)
+    # config['soil']['DKSAT'] = str(DKSAT)
+    # config['soil']['PSISAT'] = str(PSISAT)
+    # config['soil']['SMCREF'] = str(SMCREF)
+    # config['soil']['SMCWLT'] = str(SMCWLT)
+    # config['soil']['DWSAT'] = str(DWSAT)
     config['phm']['VGKSAT'] = str(VGKSAT)
     config['phm']['VGSP50'] = str(VGSP50)
     config['phm']['VGA2'] = str(VGA2)
     config['phm']['VGTLP'] = str(VGTLP)
     config['phm']['VGA3'] = str(VGA3)
-    config['vege_flux']['VCMX25'] = str(VCMX25)
-    config['vege_flux']['MP'] = str(MP)
+    # config['vege_flux']['VCMX25'] = str(VCMX25)
+    # config['vege_flux']['MP'] = str(MP)
     # config['phm']['RAI'] = str(RAI)
 
     return config
